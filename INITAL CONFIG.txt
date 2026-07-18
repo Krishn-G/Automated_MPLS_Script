@@ -1,0 +1,42 @@
+INITAL CONFIG
+
+en
+conf t
+host P1
+
+line console 0
+exec-time 0 0
+logg sync
+exit
+
+line vty 0
+exec-time 0 0
+logg sync
+end
+
+copy run start
+
+-----------------------------------------------------------------------------------------
+
+CONFIGURING SSH
+
+conf t
+ip domain name sp.lab
+user admin privilege 15 secret admin
+
+int e0/0
+ip add 10.10.20.201 255.255.255.0
+no shut
+exit
+
+crypto key gen rsa mod 2048
+
+line vty 0 4
+login local
+transport input ssh
+end
+
+copy run start
+
+-----------------------------------------------------------------------------------------
+
