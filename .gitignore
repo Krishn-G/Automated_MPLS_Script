@@ -1,2 +1,40 @@
-__pyache__/
+# Python virtual environment
+.venv/
+venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Local credentials and real Source of Truth
 Topology.yaml
+
+# Generated router configurations
+generated_configs/
+
+# Router backups
+backups/
+
+# Verification reports
+verification_reports/
+
+# Editor files
+.vscode/
+.idea/
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+# Additional Devbox virtual environment
+devbox-virtual-env/
+
+# Additional Devbox virtual environment
+devbox-virtual-env/
+
+# Generated text outputs
+All_Configs.txt
+Router_IPs.txt

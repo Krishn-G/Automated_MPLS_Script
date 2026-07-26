@@ -6,7 +6,7 @@ def Define_IPs(matrix, base_subnet = "172.16.1.0/24"):
     subnets = list(ipaddress.ip_network(base_subnet).subnets(new_prefix=30))        #Creates /30 subnets from the /24
 
     Router_IPs = {}                                                                 #Dictionary to store router IP addresses
-    
+
     subnet_id = 0
     n = len(matrix)
 
@@ -17,7 +17,7 @@ def Define_IPs(matrix, base_subnet = "172.16.1.0/24"):
             if link != None:                                                        #If a link exists between these routers
                 if (subnet_id >= len(subnets)):
                     raise ValueError("Not enough subnets to assign IP addresses to all routers")
-            
+
                 sub = subnets[subnet_id]                                            #Deriving Host IPs and assigning to router interfaces
                 hosts = list(sub.hosts())
 
@@ -30,9 +30,9 @@ def Define_IPs(matrix, base_subnet = "172.16.1.0/24"):
                     if r_id not in Router_IPs:
                         Router_IPs[r_id] = {}
                     Router_IPs[r_id][r_int] = r_ip
-                
+
                 subnet_id += 1
-    
+
     return Router_IPs
 #=====================================================================================
 

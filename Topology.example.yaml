@@ -1,0 +1,95 @@
+---
+
+global:
+  infra_subnet: 172.16.1.0/24
+  auth:
+    user: YOUR_USERNAME
+    pass: YOUR_PASSWORD
+
+nodes:
+  P1:
+    hostname: P1
+    mgmt_ip: 10.10.20.201
+    loop_ip: 10.10.100.101
+  P2:
+    hostname: P2
+    mgmt_ip: 10.10.20.202
+    loop_ip: 10.10.100.102
+  P3:
+    hostname: P3
+    mgmt_ip: 10.10.20.203
+    loop_ip: 10.10.100.103
+  P4:
+    hostname: P4
+    mgmt_ip: 10.10.20.204
+    loop_ip: 10.10.100.104
+
+  PE1:
+    hostname: PE1
+    mgmt_ip: 10.10.20.211
+    loop_ip: 10.10.100.111
+  PE2:
+    hostname: PE2
+    mgmt_ip: 10.10.20.212
+    loop_ip: 10.10.100.112
+  PE3:
+    hostname: PE3
+    mgmt_ip: 10.10.20.213
+    loop_ip: 10.10.100.113
+  PE4:
+    hostname: PE4
+    mgmt_ip: 10.10.20.214
+    loop_ip: 10.10.100.114
+
+node_interfaces:
+  P1:
+    intf:
+      - e0/1: P2
+      - e0/2: P3
+      - e0/3: P4
+      - e2/2: PE1
+      - e2/3: PE2
+
+  P2:
+    intf:
+      - e0/1: P1
+      - e0/2: P4
+      - e2/2: PE3
+      - e2/3: PE1
+
+  P3:
+    intf:
+      - e0/1: P4
+      - e0/2: P1
+      - e2/2: PE2
+      - e2/3: PE4
+
+  P4:
+    intf:
+      - e0/1: P3
+      - e0/2: P2
+      - e0/3: P1
+      - e2/2: PE4
+      - e2/3: PE3
+
+  PE1:
+    intf:
+      - g2: P1
+      - g3: P2
+
+  PE2:
+    intf:
+      - g2: P3
+      - g3: P1
+
+  PE3:
+    intf:
+      - g2: P2
+      - g3: P4
+
+  PE4:
+    intf:
+      - g2: P4
+      - g3: P3
+
+...

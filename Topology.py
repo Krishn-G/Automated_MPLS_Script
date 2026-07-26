@@ -12,16 +12,16 @@ def Matrix(data):
 
     for node, intf in data['node_interfaces'].items():                                  #For rach node, i = Local Node, j = Remote Node
         i = host_id_map[node]
-        
+
         for item in intf['intf']:
             for l_intf, r_node in item.items():
                 j = host_id_map[r_node]
-                
+
                 if matrix[i][j] is None:
                     matrix[i][j] = [None, None]
                 if matrix[j][i] is None:
                     matrix[j][i] = [None, None]
-                
+
                 matrix[i][j][0] = l_intf
                 matrix[j][i][1] = l_intf
 
