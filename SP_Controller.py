@@ -5,7 +5,7 @@ import Topology
 import Configuration
 import Backup_Routers
 import Save_All_Routers
-import Push_Remaining_Routers
+import Push_Routers
 import Verify_Loopback_Reachability
 
 #=====================================================================================
@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     Backup_Routers.Generate_Backups()
 
-    Push_Remaining_Routers.Push_Remaining_Routers()
+    Push_Routers.Push_Remaining_Routers()
     Save_All_Routers.Save_All_Routers()
 
     Verify_Loopback_Reachability.Verify_Loopback_Reachability()
