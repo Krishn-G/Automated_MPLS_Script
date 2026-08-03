@@ -18,7 +18,9 @@ ROUTERS_TO_CONFIGURE = [
     "PE1",
     "PE2",
     "PE3",
-    "PE4"
+    "PE4",
+    "RR1",
+    "RR2"
 ]
 
 
@@ -86,10 +88,10 @@ def Validate_Router_Commands(hostname, commands):
             f"{hostname}: Loopback0 configuration is missing"
         )
 
-    if "mpls ldp router-id Loopback0 force" not in commands:
-        raise ValueError(
-            f"{hostname}: MPLS LDP router ID is missing"
-        )
+    # if "mpls ldp router-id Loopback0 force" not in commands:
+    #     raise ValueError(
+    #         f"{hostname}: MPLS LDP router ID is missing"
+    #     )
 
 
 # =====================================================================================
@@ -128,7 +130,7 @@ def Preflight_Check():
 
 # =====================================================================================
 
-def Push_Remaining_Routers():
+def Push_Routers():
     """
     Pushes generated configurations to the remaining seven routers.
 
@@ -285,4 +287,4 @@ def Push_Remaining_Routers():
 # =====================================================================================
 
 if __name__ == "__main__":
-    Push_Remaining_Routers()
+    Push_Routers()

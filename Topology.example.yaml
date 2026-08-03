@@ -41,6 +41,16 @@ nodes:
     mgmt_ip: 10.10.20.214
     loop_ip: 10.10.100.114
 
+RouteReflectors:
+  RR1:
+    hostname: RR1
+    mgmt_ip: 10.10.20.221
+    loop_ip: 10.10.100.121
+  RR2:
+    hostname: RR2
+    mgmt_ip: 10.10.20.222
+    loop_ip: 10.10.100.122
+
 node_interfaces:
   P1:
     intf:

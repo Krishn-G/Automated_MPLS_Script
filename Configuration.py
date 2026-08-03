@@ -5,7 +5,7 @@ from pathlib import Path
 # =====================================================================================
 
 def Convert_Address(cidr_address):
-
+    
     interface = ipaddress.ip_interface(cidr_address)
 
     ip_address = str(interface.ip)
@@ -15,19 +15,27 @@ def Convert_Address(cidr_address):
 
 # =====================================================================================
 
-def Generate_Core_Interface(interface_name, cidr_address):
+def Generate_Core_Interface(hostname, interface_name, cidr_address):
 
     ip_address, subnet_mask = Convert_Address(cidr_address)
 
+    # Base commands that every core interface gets
     commands = [
         f"interface {interface_name}",
         f"ip address {ip_address} {subnet_mask}",
-        "ip ospf 1 area 0",
-        "mpls ip",
-        "no shutdown",
-        "exit"
+        "ip ospf 1 area 0"
     ]
 
+    # Conditionally add MPLS if it's not an RR
+    if not hostname.upper().startswith("RR"):
+        commands.append("mpls ip")
+
+    # Add the final commands to bring the interface up and exit
+    commands.extend([
+        "no shutdown",
+        "exit"
+    ])
+    
     return commands
 
 # =====================================================================================
@@ -46,21 +54,30 @@ def Generate_Loopback(cidr_address):
     return commands
 
 # =====================================================================================
-# =====================================================================================
 
 def Generate_Global_Config(hostname, loopback_cidr):
 
     loopback_ip, _ = Convert_Address(loopback_cidr)
 
+    # 1. Base command (Hostname)
     commands = [
-        f"hostname {hostname}",
-        "mpls label protocol ldp",
-        "router ospf 1",
-        f"router-id {loopback_ip}",
-        "exit",
-        "mpls ldp router-id Loopback0 force"
+        f"hostname {hostname}"
     ]
 
+    # 2. Conditionally add ALL MPLS global config if it's not an RR
+    if not hostname.upper().startswith("RR"):
+        commands.extend([
+            "mpls label protocol ldp",
+            "mpls ldp router-id Loopback0 force"
+        ])
+
+    # 3. Add OSPF configuration
+    commands.extend([
+        "router ospf 1",
+        f"router-id {loopback_ip}",
+        "exit"
+    ])
+    
     return commands
 
 # =====================================================================================
@@ -94,6 +111,7 @@ def Generate_Router_Config(hostname, interface_addresses):
 
         commands.extend(
             Generate_Core_Interface(
+                hostname,
                 interface_name,
                 cidr_address
             )

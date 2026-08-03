@@ -35,7 +35,9 @@ def Generate_Backups():
         "PE1",
         "PE2",
         "PE3",
-        "PE4"
+        "PE4",
+        "RR1",
+        "RR2"
     ]
 
     # Create the backup directory if it does not already exist.
@@ -127,4 +129,5 @@ def Generate_Backups():
 # =====================================================================================
 
 if __name__ == "__main__":
-    Backup_Remaining_Routers()
+    Generate_Backups()
+    

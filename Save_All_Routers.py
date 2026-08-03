@@ -17,7 +17,9 @@ ROUTERS = [
     "PE1",
     "PE2",
     "PE3",
-    "PE4"
+    "PE4",
+    "RR1",
+    "RR2"
 ]
 
 
