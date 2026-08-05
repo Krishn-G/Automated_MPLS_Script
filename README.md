@@ -1,178 +1,79 @@
-# Automated MPLS Service Provider Lab
+# Automated MPLS Service Provider Fabric
 
-This project automatically generates, deploys, and verifies an MPLS service-provider underlay in Cisco CML.
+Python-driven automation that builds, deploys, and verifies an MPLS L3VPN service-provider core on Cisco IOS, from a single YAML source of truth to a fully peered BGP/LDP fabric.
+
+![Topology](Automated_MPLS.png)
+
+## What this does
+
+Point the scripts at a YAML file describing your routers and links, and they will:
+
+1. Build the network adjacency matrix from the topology definition
+2. Carve up an infrastructure `/24` into `/30` point-to-point subnets and assign them automatically
+3. Generate per-router IOS configuration (hostname, loopback, OSPF, MPLS LDP, core interfaces)
+4. Generate BGP configuration for a route-reflector design (RR1/RR2 with PE1-PE4 as clients)
+5. Back up every router's existing config before touching anything
+6. Push the generated configs over SSH with Netmiko
+7. Save running-config to startup-config once the push is confirmed
+8. Verify loopback-to-loopback reachability across the fabric
+
+No manual CLI typing anywhere in the deployment path. Everything is generated from `Topology.yaml` and pushed programmatically.
 
 ## Topology
 
-The MPLS core contains eight routers:
+Ten routers: **P1-P4** (core/P routers), **PE1-PE4** (provider edge), **RR1-RR2** (BGP route reflectors). Core links run OSPF area 0 with MPLS LDP; PE and RR loopbacks peer over MP-iBGP with VPNv4 address families, RRs reflecting to the PE clients.
 
-- P1
-- P2
-- P3
-- P4
-- PE1
-- PE2
-- PE3
-- PE4
+## Repo layout
 
-The routers use a separate out-of-band management network for SSH access.
+| File | Role |
+|---|---|
+| `Topology.py` | Builds an adjacency matrix from `Topology.yaml` |
+| `Addressing.py` | Splits the infra subnet into `/30`s and assigns interface IPs |
+| `Configuration.py` | Generates IOS config (hostname, OSPF, LDP, interfaces) per router |
+| `BGP_Setup.py` | Generates and pushes MP-iBGP / VPNv4 config for RRs and PE clients |
+| `SP_Controller.py` | Orchestrator: runs the full build-and-deploy pipeline end to end |
+| `Connection_Test.py` | Sanity-checks SSH reachability to P1 before doing anything else |
+| `Backup_Routers.py` | Pulls and saves startup-config for every router before deployment |
+| `Push_Routers.py` | Preflight-checks generated configs against backups, then pushes them |
+| `Enable_PE_Interfaces.py` | Brings up Gi2/Gi3 on the PE routers |
+| `Save_All_Routers.py` | Copies running-config to startup-config across the fabric |
+| `Automated_Verification.py`, `Verify_LDP.py`, `Verify_Loopback_Reachability.py`, `Verify_All_Routers.py`, `Verify_Save_P1.py`, `Validate_Remaining_Routers.py` | Read-only checks: OSPF neighbor state, LDP session state, end-to-end loopback pings, config validation |
+| `Topology.example.yaml` | Template source-of-truth file, safe to commit |
+| `INITAL CONFIG.txt` | Bootstrap CLI steps to get SSH access on a fresh CML router before the automation takes over |
 
-## Technologies
+## Requirements
 
 - Python 3
-- YAML
-- Netmiko
-- Cisco IOS and IOS XE
-- OSPF
-- MPLS LDP
-- Cisco Modeling Labs
-
-## Source of Truth
-
-The network information is stored in:
-
-`Topology.yaml`
-
-It contains:
-
-- Management IP addresses
-- Loopback IP addresses
-- Authentication information
-- Router-to-router interface mappings
-- Infrastructure subnet
-
-## Addressing
-
-The infrastructure subnet is:
-
-`172.16.1.0/24`
-
-The Python IPAM logic divides this subnet into `/30` point-to-point networks.
-
-Loopback addresses use `/32` prefixes.
-
-## Main Python Files
-
-### Topology.py
-
-Builds the network adjacency matrix from `Topology.yaml`.
-
-### Addressing.py
-
-Divides the infrastructure subnet into `/30` networks and assigns IP addresses to both ends of every link.
-
-### SP_Controller.py
-
-Loads the Source of Truth, builds the topology, calculates interface addresses, and generates router configurations.
-
-### Configuration.py
-
-Generates Cisco IOS configuration commands for:
-
-- Hostnames
-- Loopback0
-- OSPF
-- MPLS LDP
-- Core-facing interfaces
-
-It also saves one configuration file for each router.
-
-## Generated Configurations
-
-Generated router configurations are stored in:
-
-`generated_configs/`
-
-The folder contains:
-
-- P1.cfg
-- P2.cfg
-- P3.cfg
-- P4.cfg
-- PE1.cfg
-- PE2.cfg
-- PE3.cfg
-- PE4.cfg
-
-## Backups
-
-Router configurations taken before MPLS deployment are stored in:
-
-`backups/`
-
-## Deployment Scripts
-
-The following scripts were used to deploy the configurations:
-
-- Push_P1.py
-- Push_Remaining_Routers.py
-- Enable_PE_Interfaces.py
-- Save_All_Routers.py
-
-## Verification Scripts
-
-The following scripts verify the MPLS underlay:
-
-- Automated_Verification.py
-- Verify_LDP.py
-- Verify_Loopback_Reachability.py
-- Final_Verification_Report.py
-
-Verification includes:
-
-- OSPF neighbor state
-- MPLS LDP neighbor state
-- End-to-end loopback reachability
-- SSH connectivity
-- Final PASS/FAIL reporting
-
-## Verification Reports
-
-Timestamped verification reports are stored in:
-
-`verification_reports/`
-
-## Python Environment
-
-Create and activate the virtual environment:
+- [Netmiko](https://github.com/ktbyers/netmiko) for SSH
+- PyYAML
+- Cisco Modeling Labs (or equivalent) running Cisco IOS/IOS XE
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
+pip install netmiko pyyaml
+```
 
-'''
-Install the required packages:
+## Usage
 
-python -m pip install -r requirements.txt
-Generate Configurations
+1. Copy `Topology.example.yaml` to `Topology.yaml` and fill in real management IPs, loopbacks, interface mappings, and credentials. `Topology.yaml` is gitignored, so real credentials never get committed.
+2. Confirm SSH reachability:
+   ```bash
+   python3 Connection_Test.py
+   ```
+3. Run the full pipeline:
+   ```bash
+   python3 SP_Controller.py
+   ```
+   This generates configs into `generated_configs/`, backs up every router into `backups/`, pushes the configs, saves them, and runs loopback verification. Review `generated_configs/` before confirming any push.
+4. Individual scripts (`Push_Routers.py`, `Save_All_Routers.py`, etc.) can be run standalone if you want to step through the process manually instead of the full orchestrated run.
 
-Run:
+## Safety notes
 
-python3 SP_Controller.py
+- `Push_Routers.py` refuses to run unless a backup already exists for every router, and it blocks configs that touch the management interface.
+- Both the config push and the save-to-startup step require typing `PUSH ALL` / `SAVE ALL` at a prompt before anything changes on the routers.
+- `Topology.yaml`, `generated_configs/`, `backups/`, and `verification_reports/` are all gitignored. Never commit real credentials or router state.
 
-Review the files inside generated_configs/ before pushing anything to the routers.
+## Status
 
-Run Final Verification
-
-Run:
-
-python3 Final_Verification_Report.py
-Current Status
-
-The MPLS underlay is operational.
-
-The following checks passed:
-
-OSPF adjacencies
-MPLS LDP sessions
-Loopback reachability
-SSH connections
-Router configuration saves
-
-The individual MPLS-interface verification step was skipped by choice.
-
-Security Note
-
-Do not publish real usernames or passwords stored in Topology.yaml.
-
-For a production-quality version, credentials should be stored in environment variables or a secure secrets manager.
+The MPLS/OSPF underlay and MP-iBGP overlay are both scripted and verified end to end. This is a personal networking lab project built for JNCIE-SP style practice, not production code, credentials and error handling are minimal by design for lab use.
